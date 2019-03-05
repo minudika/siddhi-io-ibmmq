@@ -20,9 +20,9 @@ package org.wso2.extension.siddhi.io.ibmmq.source;
 
 import com.ibm.mq.jms.MQConnection;
 import com.ibm.mq.jms.MQQueueConnectionFactory;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.wso2.extension.siddhi.io.ibmmq.source.exception.IBMMQSourceAdaptorRuntimeException;
 import org.wso2.siddhi.core.stream.input.source.SourceEventListener;
 
 import java.nio.ByteBuffer;
@@ -32,7 +32,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
-import javax.jms.ExceptionListener;
+
 import javax.jms.JMSException;
 import javax.jms.MapMessage;
 import javax.jms.Message;
@@ -50,7 +50,7 @@ public class IBMMessageConsumerThread implements Runnable {
     private MQConnection connection;
     private MessageConsumer messageConsumer;
     private volatile boolean paused;
-    private volatile boolean inactive;
+    private volatile boolean isInactive;
     private ReentrantLock lock;
     private Condition condition;
 
@@ -75,7 +75,7 @@ public class IBMMessageConsumerThread implements Runnable {
 
     @Override
     public void run() {
-        while (!inactive) {
+        while (!isInactive) {
             try {
                 if (paused) {
                     lock.lock();
@@ -103,11 +103,14 @@ public class IBMMessageConsumerThread implements Runnable {
                 } else if (message instanceof ByteBuffer) {
                     sourceEventListener.onEvent(message, null);
                 }
-            } catch (JMSException e) {
-                throw new IBMMQSourceAdaptorRuntimeException("Exception occurred during consuming messages " +
-                        "from the queue: " + e.getMessage(), e);
             } catch (Throwable t) {
                 logger.error("Exception occurred during consuming messages: " + t.getMessage(), t);
+                if (!ibmmqConnectionRetryHandler.retry()) {
+                    logger.error("Connection to the MQ provider failed after retrying for "
+                            + ibmmqConnectionRetryHandler.getRetryCount() + " times.", t);
+                } else {
+                    isInactive = false;
+                }
             }
         }
     }
@@ -127,7 +130,7 @@ public class IBMMessageConsumerThread implements Runnable {
     }
 
     void shutdownConsumer() {
-        inactive = true;
+        isInactive = true;
         try {
             if (Objects.nonNull(messageConsumer)) {
                 messageConsumer.close();
@@ -152,19 +155,6 @@ public class IBMMessageConsumerThread implements Runnable {
         } else {
             connection = (MQConnection) mqQueueConnectionFactory.createConnection();
         }
-        ExceptionListener exceptionListener = new ExceptionListener() {
-            @Override
-            public void onException(JMSException e) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Exception was caught at IBMMQ connection exception listener.", e);
-                }
-                if (!ibmmqConnectionRetryHandler.retry()) {
-                    logger.error("Connection to the MQ provider failed after retrying for "
-                            + ibmmqConnectionRetryHandler.getRetryCount() + " times.", e);
-                }
-            }
-        };
-        connection.setExceptionListener(exceptionListener);
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Queue queue = session.createQueue(ibmMessageConsumerBean.getDestinationName());
         this.messageConsumer = session.createConsumer(queue);

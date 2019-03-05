@@ -174,6 +174,7 @@ public class IBMMQSource extends Source {
             connectionFactory.setQueueManager(optionHolder.validateAndGetOption(IBMMQConstants.QUEUE_MANAGER_NAME)
                     .getValue());
             connectionFactory.setTransportType(WMQConstants.WMQ_CM_CLIENT);
+            connectionFactory.setClientReconnectTimeout(30);
             scheduledExecutorService = siddhiAppContext.getScheduledExecutorService();
         } catch (JMSException e) {
             throw new IBMMQSourceAdaptorRuntimeException("Error while initializing IBM MQ source: " + optionHolder.
