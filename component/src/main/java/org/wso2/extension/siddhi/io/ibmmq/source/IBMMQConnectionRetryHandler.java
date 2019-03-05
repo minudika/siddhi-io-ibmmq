@@ -56,9 +56,9 @@ class IBMMQConnectionRetryHandler {
     private int maxRetryCount;
 
     /**
-     * States whether a retrying is in progress.
+     * States whether a isOnRetrying is in progress.
      */
-    private volatile boolean retrying = false;
+    private volatile boolean isOnRetrying = false;
 
     /**
      * Creates a IBMMQ connection retry handler.
@@ -75,49 +75,45 @@ class IBMMQConnectionRetryHandler {
     }
 
     /**
-     * To retry the retrying to connect to MQ provider.
+     * To retry the isOnRetrying to connect to MQ provider.
      *
-     * @return True if retrying was successful.
+     * @return True if isOnRetrying was successful.
      * @throws JMSException MQ Connector Exception.
      */
     boolean retry() {
-        if (retrying) {
+        if (isOnRetrying) {
             if (logger.isDebugEnabled()) {
-                logger.debug("Retrying is in progress from a different thread, hence not retrying");
+                logger.debug("Retrying is in progress from a different thread, hence not isOnRetrying");
             }
             return false;
         } else {
-            retrying = true;
+            isOnRetrying = true;
         }
 
-        while (retryCount < maxRetryCount) {
+        while (true) {
             try {
                 retryCount++;
                 messageConsumer.shutdownConsumer();
                 messageConsumer.connect();
                 logger.info("Connected to the message broker to " + messageConsumer.getQueueName()
-                        + "after retrying for " + retryCount + " time(s)");
+                        + "after isOnRetrying for " + retryCount + " time(s)");
                 retryCount = 0;
                 currentRetryInterval = retryInterval;
-                retrying = false;
+                isOnRetrying = false;
                 return true;
             } catch (JMSException e) {
                 messageConsumer.shutdownConsumer();
-                if (retryCount < maxRetryCount) {
-                    logger.error("Retry connection attempt " + retryCount + " to MQ Provider failed. Retry will be " +
-                            "attempted again after " +
-                            TimeUnit.SECONDS.convert(currentRetryInterval, TimeUnit.MILLISECONDS) + " seconds");
-                    try {
-                        TimeUnit.MILLISECONDS.sleep(currentRetryInterval);
-                    } catch (InterruptedException ex) {
-                        Thread.currentThread().interrupt();
-                    }
-                    currentRetryInterval = currentRetryInterval * 2;
+                logger.error("Retry connection attempt " + retryCount + " to MQ Provider failed. Retry will be " +
+                        "attempted again after " +
+                        TimeUnit.SECONDS.convert(currentRetryInterval, TimeUnit.MILLISECONDS) + " seconds");
+                try {
+                    TimeUnit.MILLISECONDS.sleep(currentRetryInterval);
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
                 }
+                currentRetryInterval = currentRetryInterval * 2;
             }
         }
-        retrying = false;
-        return false;
     }
 
     public int getRetryCount() {
