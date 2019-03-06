@@ -51,11 +51,6 @@ class IBMMQConnectionRetryHandler {
     private int retryCount = 0;
 
     /**
-     * Maximum retry count.
-     */
-    private int maxRetryCount;
-
-    /**
      * States whether a isOnRetrying is in progress.
      */
     private volatile boolean isOnRetrying = false;
@@ -65,12 +60,10 @@ class IBMMQConnectionRetryHandler {
      *
      * @param messageConsumer IBMMQ message consumer that needs to retry.
      * @param retryInterval   Retry interval between.
-     * @param maxRetryCount   Maximum retries.
      */
-    IBMMQConnectionRetryHandler(IBMMessageConsumerThread messageConsumer, long retryInterval, int maxRetryCount) {
+    IBMMQConnectionRetryHandler(IBMMessageConsumerThread messageConsumer, long retryInterval) {
         this.messageConsumer = messageConsumer;
         this.retryInterval = retryInterval;
-        this.maxRetryCount = maxRetryCount;
         this.currentRetryInterval = retryInterval;
     }
 

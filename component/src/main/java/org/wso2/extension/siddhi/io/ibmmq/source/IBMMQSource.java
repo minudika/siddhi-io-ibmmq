@@ -105,7 +105,13 @@ import javax.jms.JMSException;
                                 "WMQ_CLIENT_RECONNECT:5005' ",
                         type = DataType.STRING,
                         optional = true,
-                        defaultValue = "null")
+                        defaultValue = "null"),
+                @Parameter(name = IBMMQConstants.CLIENT_RECONNECT_TIMEOUT,
+                        description = "The time a client waits for reconnection. The value should be provided in " +
+                                "seconds.",
+                        type = DataType.INT,
+                        optional = true,
+                        defaultValue = "30")
         },
         examples = {
                 @Example(syntax = "@source(type='ibmmq',"
@@ -174,7 +180,10 @@ public class IBMMQSource extends Source {
             connectionFactory.setQueueManager(optionHolder.validateAndGetOption(IBMMQConstants.QUEUE_MANAGER_NAME)
                     .getValue());
             connectionFactory.setTransportType(WMQConstants.WMQ_CM_CLIENT);
-            connectionFactory.setClientReconnectTimeout(30);
+            int clientReconnectTimeout = Integer.parseInt(optionHolder.validateAndGetStaticValue(
+                    IBMMQConstants.CLIENT_RECONNECT_TIMEOUT,
+                    IBMMQConstants.DEFAULT_CLIENT_RECONNECTION_TIMEOUT));
+            connectionFactory.setClientReconnectTimeout(clientReconnectTimeout);
             scheduledExecutorService = siddhiAppContext.getScheduledExecutorService();
         } catch (JMSException e) {
             throw new IBMMQSourceAdaptorRuntimeException("Error while initializing IBM MQ source: " + optionHolder.

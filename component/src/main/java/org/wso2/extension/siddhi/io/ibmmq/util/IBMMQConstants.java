@@ -36,4 +36,6 @@ public class IBMMQConstants {
     public static final String DEFAULT_MAX_RETRIES = "5";
     public static final String RETRY_INTERVAL = "retry.interval";
     public static final String DEFAULT_RETRY_INTERVAL = "2";
+    public static final String DEFAULT_CLIENT_RECONNECTION_TIMEOUT = "30";
+    public static final String CLIENT_RECONNECT_TIMEOUT = "client.reconnecting.timeout";
 }

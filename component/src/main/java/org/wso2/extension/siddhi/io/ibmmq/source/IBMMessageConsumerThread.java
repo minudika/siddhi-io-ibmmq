@@ -67,7 +67,7 @@ public class IBMMessageConsumerThread implements Runnable {
         this.sourceEventListener = sourceEventListener;
         this.queueName = ibmMessageConsumerBean.getQueueName();
         this.ibmmqConnectionRetryHandler = new IBMMQConnectionRetryHandler(this,
-                ibmMessageConsumerBean.getRetryInterval(), ibmMessageConsumerBean.getMaxRetryCount());
+                ibmMessageConsumerBean.getRetryInterval());
         lock = new ReentrantLock();
         condition = lock.newCondition();
         connect();
