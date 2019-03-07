@@ -23,13 +23,18 @@ import com.ibm.mq.jms.MQQueueConnectionFactory;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wso2.siddhi.core.exception.ConnectionUnavailableException;
+import org.wso2.siddhi.core.stream.input.source.Source;
 import org.wso2.siddhi.core.stream.input.source.SourceEventListener;
+import org.wso2.siddhi.core.util.transport.BackoffRetryCounter;
 
 import java.nio.ByteBuffer;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -50,7 +55,6 @@ public class IBMMessageConsumerThread implements Runnable {
     private MQConnection connection;
     private MessageConsumer messageConsumer;
     private volatile boolean paused;
-    private volatile boolean isInactive;
     private ReentrantLock lock;
     private Condition condition;
 
@@ -59,15 +63,28 @@ public class IBMMessageConsumerThread implements Runnable {
     private MQQueueConnectionFactory mqQueueConnectionFactory;
     private IBMMQConnectionRetryHandler ibmmqConnectionRetryHandler;
 
+    private AtomicBoolean isTryingToConnect = new AtomicBoolean(false);
+    private BackoffRetryCounter backoffRetryCounter = new BackoffRetryCounter();
+    private AtomicBoolean isConnected = new AtomicBoolean(true);
+    private AtomicBoolean isInactive = new AtomicBoolean(true);
+    private int retryCount = 0;
+    private ScheduledExecutorService executorService;
+    private Source.ConnectionCallback connectionCallback;
+
     public IBMMessageConsumerThread(SourceEventListener sourceEventListener,
                                     IBMMessageConsumerBean ibmMessageConsumerBean,
-                                    MQQueueConnectionFactory mqQueueConnectionFactory) throws JMSException {
+                                    MQQueueConnectionFactory mqQueueConnectionFactory,
+                                    ScheduledExecutorService executorService,
+                                    Source.ConnectionCallback connectionCallback)
+            throws JMSException, ConnectionUnavailableException {
         this.ibmMessageConsumerBean = ibmMessageConsumerBean;
         this.mqQueueConnectionFactory = mqQueueConnectionFactory;
         this.sourceEventListener = sourceEventListener;
         this.queueName = ibmMessageConsumerBean.getQueueName();
+        this.executorService = executorService;
         this.ibmmqConnectionRetryHandler = new IBMMQConnectionRetryHandler(this,
-                ibmMessageConsumerBean.getRetryInterval());
+                ibmMessageConsumerBean.getRetryInterval(), executorService);
+        this.connectionCallback = connectionCallback;
         lock = new ReentrantLock();
         condition = lock.newCondition();
         connect();
@@ -75,7 +92,7 @@ public class IBMMessageConsumerThread implements Runnable {
 
     @Override
     public void run() {
-        while (!isInactive) {
+        while (!isInactive.get()) {
             try {
                 if (paused) {
                     lock.lock();
@@ -105,13 +122,9 @@ public class IBMMessageConsumerThread implements Runnable {
                 }
             } catch (Throwable t) {
                 logger.error("Exception occurred during consuming messages: " + t.getMessage(), t);
-                if (!ibmmqConnectionRetryHandler.retry()) {
-                    logger.error("Connection to the MQ provider failed after retrying for "
-                            + ibmmqConnectionRetryHandler.getRetryCount() + " times.", t);
-                } else {
-                    isInactive = false;
-                }
+                connectionCallback.onError(new ConnectionUnavailableException(t));
             }
+
         }
     }
 
@@ -130,15 +143,15 @@ public class IBMMessageConsumerThread implements Runnable {
     }
 
     void shutdownConsumer() {
-        isInactive = true;
+        isInactive.set(true);
         try {
             if (Objects.nonNull(messageConsumer)) {
                 messageConsumer.close();
             }
         } catch (JMSException e) {
             logger.error("Error occurred while closing the consumer for the queue: " + queueName + ". ", e);
-
         }
+
         try {
             if (Objects.nonNull(connection)) {
                 connection.close();
@@ -148,20 +161,38 @@ public class IBMMessageConsumerThread implements Runnable {
         }
     }
 
-    public void connect() throws JMSException {
-        if (ibmMessageConsumerBean.isSecured()) {
-            connection = (MQConnection) mqQueueConnectionFactory.createConnection(
-                    ibmMessageConsumerBean.getUserName(), ibmMessageConsumerBean.getPassword());
-        } else {
-            connection = (MQConnection) mqQueueConnectionFactory.createConnection();
+    public void connect() throws ConnectionUnavailableException {
+        try {
+            if (ibmMessageConsumerBean.isSecured()) {
+                connection = (MQConnection) mqQueueConnectionFactory.createConnection(
+                        ibmMessageConsumerBean.getUserName(), ibmMessageConsumerBean.getPassword());
+            } else {
+                connection = (MQConnection) mqQueueConnectionFactory.createConnection();
+            }
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            Queue queue = session.createQueue(ibmMessageConsumerBean.getDestinationName());
+            this.messageConsumer = session.createConsumer(queue);
+            this.connection.start();
+            isInactive.set(false);
+        } catch (JMSException e) {
+            throw new ConnectionUnavailableException(e.getMessage());
         }
-        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Queue queue = session.createQueue(ibmMessageConsumerBean.getDestinationName());
-        this.messageConsumer = session.createConsumer(queue);
-        this.connection.start();
     }
 
     public String getQueueName() {
         return queueName;
+    }
+
+    private void waitWhileConnect() {
+        try {
+            synchronized (this) {
+                while (isTryingToConnect.get()) {
+                    this.wait();
+                }
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException("Consumer was interrupted while " +
+                    "busy wait on connection retrying condition " + e.getMessage(), e);
+        }
     }
 }

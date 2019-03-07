@@ -20,14 +20,25 @@ package org.wso2.extension.siddhi.io.ibmmq.source;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wso2.siddhi.core.util.transport.BackoffRetryCounter;
 
-import java.util.concurrent.TimeUnit;
-import javax.jms.JMSException;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * This class tries to connect to MQ provider until the maximum re-try count meets.
  */
 class IBMMQConnectionRetryHandler {
+
+    private AtomicBoolean isTryingToConnect = new AtomicBoolean(false);
+    private BackoffRetryCounter backoffRetryCounter = new BackoffRetryCounter();
+
+    public void setIsConnected(AtomicBoolean isConnected) {
+        this.isConnected = isConnected;
+    }
+
+    private AtomicBoolean isConnected = new AtomicBoolean(false);
+
     /**
      * This {@link IBMMessageConsumerThread} instance represents the MQ receiver that asked for retry.
      */
@@ -55,16 +66,20 @@ class IBMMQConnectionRetryHandler {
      */
     private volatile boolean isOnRetrying = false;
 
+    private ScheduledExecutorService executorService;
+
     /**
      * Creates a IBMMQ connection retry handler.
      *
      * @param messageConsumer IBMMQ message consumer that needs to retry.
      * @param retryInterval   Retry interval between.
      */
-    IBMMQConnectionRetryHandler(IBMMessageConsumerThread messageConsumer, long retryInterval) {
+    IBMMQConnectionRetryHandler(IBMMessageConsumerThread messageConsumer, long retryInterval,
+                                ScheduledExecutorService executorService) {
         this.messageConsumer = messageConsumer;
         this.retryInterval = retryInterval;
         this.currentRetryInterval = retryInterval;
+        this.executorService = executorService;
     }
 
     /**
@@ -76,7 +91,7 @@ class IBMMQConnectionRetryHandler {
     boolean retry() {
         if (isOnRetrying) {
             if (logger.isDebugEnabled()) {
-                logger.debug("Retrying is in progress from a different thread, hence not isOnRetrying");
+                logger.debug("Retrying is in progress from a different thread, hence not retrying.");
             }
             return false;
         } else {
@@ -84,28 +99,15 @@ class IBMMQConnectionRetryHandler {
         }
 
         while (true) {
-            try {
-                retryCount++;
-                messageConsumer.shutdownConsumer();
-                messageConsumer.connect();
-                logger.info("Connected to the message broker to " + messageConsumer.getQueueName()
-                        + "after isOnRetrying for " + retryCount + " time(s)");
-                retryCount = 0;
-                currentRetryInterval = retryInterval;
-                isOnRetrying = false;
-                return true;
-            } catch (JMSException e) {
-                messageConsumer.shutdownConsumer();
-                logger.error("Retry connection attempt " + retryCount + " to MQ Provider failed. Retry will be " +
-                        "attempted again after " +
-                        TimeUnit.SECONDS.convert(currentRetryInterval, TimeUnit.MILLISECONDS) + " seconds");
-                try {
-                    TimeUnit.MILLISECONDS.sleep(currentRetryInterval);
-                } catch (InterruptedException ex) {
-                    Thread.currentThread().interrupt();
-                }
-                currentRetryInterval = currentRetryInterval * 2;
-            }
+            retryCount++;
+            messageConsumer.shutdownConsumer();
+//                messageConsumer.connect();
+            logger.info("Connected to the message broker to " + messageConsumer.getQueueName()
+                    + "after isOnRetrying for " + retryCount + " time(s)");
+            retryCount = 0;
+            currentRetryInterval = retryInterval;
+            isOnRetrying = false;
+            return true;
         }
     }
 
