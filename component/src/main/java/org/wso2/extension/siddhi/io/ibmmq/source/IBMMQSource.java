@@ -194,8 +194,6 @@ public class IBMMQSource extends Source {
 
     @Override
     public void connect(ConnectionCallback connectionCallback) throws ConnectionUnavailableException {
-        logger.error("***************** Connected..");
-        //ConnectionCallback is not used as re-connection is handled by IBM MQ client.
         ibmMessageConsumerGroup = new IBMMessageConsumerGroup(scheduledExecutorService,
                 connectionFactory, ibmMessageConsumerBean, connectionCallback);
         ibmMessageConsumerGroup.run(sourceEventListener);

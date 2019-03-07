@@ -33,7 +33,6 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -175,18 +174,5 @@ public class IBMMessageConsumerThread implements Runnable {
 
     public String getQueueName() {
         return queueName;
-    }
-
-    private void waitWhileConnect() {
-        try {
-            synchronized (this) {
-                while (isTryingToConnect.get()) {
-                    this.wait();
-                }
-            }
-        } catch (InterruptedException e) {
-            throw new RuntimeException("Consumer was interrupted while " +
-                    "busy wait on connection retrying condition " + e.getMessage(), e);
-        }
     }
 }

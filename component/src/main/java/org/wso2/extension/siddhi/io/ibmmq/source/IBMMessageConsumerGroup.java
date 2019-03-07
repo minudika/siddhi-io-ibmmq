@@ -31,7 +31,6 @@ import java.util.concurrent.ScheduledExecutorService;
 
 import javax.jms.JMSException;
 
-
 /**
  * This processes the IBM messages using a thread pool.
  */
