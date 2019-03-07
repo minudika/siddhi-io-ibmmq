@@ -61,29 +61,23 @@ public class IBMMessageConsumerThread implements Runnable {
     private String queueName;
     private IBMMessageConsumerBean ibmMessageConsumerBean;
     private MQQueueConnectionFactory mqQueueConnectionFactory;
-    private IBMMQConnectionRetryHandler ibmmqConnectionRetryHandler;
 
     private AtomicBoolean isTryingToConnect = new AtomicBoolean(false);
     private BackoffRetryCounter backoffRetryCounter = new BackoffRetryCounter();
     private AtomicBoolean isConnected = new AtomicBoolean(true);
     private AtomicBoolean isInactive = new AtomicBoolean(true);
     private int retryCount = 0;
-    private ScheduledExecutorService executorService;
     private Source.ConnectionCallback connectionCallback;
 
     public IBMMessageConsumerThread(SourceEventListener sourceEventListener,
                                     IBMMessageConsumerBean ibmMessageConsumerBean,
                                     MQQueueConnectionFactory mqQueueConnectionFactory,
-                                    ScheduledExecutorService executorService,
                                     Source.ConnectionCallback connectionCallback)
             throws JMSException, ConnectionUnavailableException {
         this.ibmMessageConsumerBean = ibmMessageConsumerBean;
         this.mqQueueConnectionFactory = mqQueueConnectionFactory;
         this.sourceEventListener = sourceEventListener;
         this.queueName = ibmMessageConsumerBean.getQueueName();
-        this.executorService = executorService;
-        this.ibmmqConnectionRetryHandler = new IBMMQConnectionRetryHandler(this,
-                ibmMessageConsumerBean.getRetryInterval(), executorService);
         this.connectionCallback = connectionCallback;
         lock = new ReentrantLock();
         condition = lock.newCondition();
@@ -175,7 +169,7 @@ public class IBMMessageConsumerThread implements Runnable {
             this.connection.start();
             isInactive.set(false);
         } catch (JMSException e) {
-            throw new ConnectionUnavailableException(e.getMessage());
+            throw new ConnectionUnavailableException(e.getMessage(), e);
         }
     }
 

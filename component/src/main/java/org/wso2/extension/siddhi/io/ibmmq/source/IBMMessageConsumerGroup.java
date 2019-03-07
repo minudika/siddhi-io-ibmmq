@@ -69,13 +69,12 @@ public class IBMMessageConsumerGroup {
             IBMMessageConsumerThread ibmMessageConsumer = null;
             try {
                 ibmMessageConsumer = new IBMMessageConsumerThread(sourceEventListener,
-                        ibmMessageConsumerBean, connectionFactory, executorService, connectionCallback);
-
+                        ibmMessageConsumerBean, connectionFactory, connectionCallback);
             ibmMessageConsumerThreads.add(ibmMessageConsumer);
             logger.info("IBM MQ message consumer worker thread '" + i + "' starting to listen on queue '" +
                     ibmMessageConsumerBean.getQueueName() + "'");
             } catch (JMSException e) {
-                throw new ConnectionUnavailableException(e.getMessage());
+                throw new ConnectionUnavailableException(e.getMessage(), e);
             }
         }
         for (IBMMessageConsumerThread consumerThread : ibmMessageConsumerThreads) {
