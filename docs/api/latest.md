@@ -1,4 +1,4 @@
-# API Docs - v1.0.7
+# API Docs - v1.1.0-SNAPSHOT
 
 ## Sink
 
@@ -102,7 +102,7 @@
 
 <span id="syntax" class="md-typeset" style="display: block; font-weight: bold;">Syntax</span>
 ```
-@source(type="ibmmq", destination.name="<STRING>", host="<STRING>", port="<STRING>", channel="<STRING>", queue.manager="<STRING>", username="<STRING>", password="<STRING>", worker.count="<INT>", batch.properties="<STRING>", @map(...)))
+@source(type="ibmmq", destination.name="<STRING>", host="<STRING>", port="<STRING>", channel="<STRING>", queue.manager="<STRING>", username="<STRING>", password="<STRING>", worker.count="<INT>", batch.properties="<STRING>", client.reconnecting.timeout="<INT>", @map(...)))
 ```
 
 <span id="query-parameters" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">QUERY PARAMETERS</span>
@@ -184,6 +184,14 @@
         <td style="vertical-align: top; word-wrap: break-word">IBM MQ properties which are supported by the client can be provided as key value pairs which is separated by ",". as an example batch.properties = 'XMSC_WMQ_CLIENT_RECONNECT_OPTIONS:1600,WMQ_CLIENT_RECONNECT:5005' </td>
         <td style="vertical-align: top">null</td>
         <td style="vertical-align: top">STRING</td>
+        <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">client.reconnecting.timeout</td>
+        <td style="vertical-align: top; word-wrap: break-word">The time a client waits for reconnection. The value should be provided in seconds.</td>
+        <td style="vertical-align: top">30</td>
+        <td style="vertical-align: top">INT</td>
         <td style="vertical-align: top">Yes</td>
         <td style="vertical-align: top">No</td>
     </tr>

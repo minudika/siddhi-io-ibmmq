@@ -18,13 +18,21 @@
 
 package org.wso2.extension.siddhi.io.ibmmq.source;
 
+import com.ibm.mq.MQException;
 import com.ibm.mq.jms.MQQueueConnectionFactory;
+
 import org.apache.log4j.Logger;
+import org.wso2.extension.siddhi.io.ibmmq.util.IBMMQConstants;
+import org.wso2.siddhi.core.exception.ConnectionUnavailableException;
+import org.wso2.siddhi.core.exception.SiddhiAppRuntimeException;
+import org.wso2.siddhi.core.stream.input.source.Source;
 import org.wso2.siddhi.core.stream.input.source.SourceEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
+
+import javax.jms.JMSException;
 
 /**
  * This processes the IBM messages using a thread pool.
@@ -35,13 +43,18 @@ public class IBMMessageConsumerGroup {
     private ScheduledExecutorService executorService;
     private MQQueueConnectionFactory connectionFactory;
     private IBMMessageConsumerBean ibmMessageConsumerBean;
-
+    private Source.ConnectionCallback connectionCallback;
+    private String siddhiAppName;
 
     IBMMessageConsumerGroup(ScheduledExecutorService executorService, MQQueueConnectionFactory connectionFactory,
-                            IBMMessageConsumerBean ibmMessageConsumerBean) {
+                            IBMMessageConsumerBean ibmMessageConsumerBean,
+                            Source.ConnectionCallback connectionCallback,
+                            String siddhiAppName) {
         this.executorService = executorService;
         this.connectionFactory = connectionFactory;
         this.ibmMessageConsumerBean = ibmMessageConsumerBean;
+        this.connectionCallback = connectionCallback;
+        this.siddhiAppName = siddhiAppName;
     }
 
     void pause() {
@@ -56,21 +69,36 @@ public class IBMMessageConsumerGroup {
         ibmMessageConsumerThreads.forEach(IBMMessageConsumerThread::shutdownConsumer);
     }
 
-    void run(SourceEventListener sourceEventListener) {
-        try {
-            for (int i = 0; i < ibmMessageConsumerBean.getWorkerCount(); i++) {
-                IBMMessageConsumerThread ibmMessageConsumer = new IBMMessageConsumerThread(sourceEventListener,
-                        ibmMessageConsumerBean, connectionFactory);
+    void run(SourceEventListener sourceEventListener) throws ConnectionUnavailableException {
+        for (int i = 0; i < ibmMessageConsumerBean.getWorkerCount(); i++) {
+            IBMMessageConsumerThread ibmMessageConsumer = null;
+            try {
+                ibmMessageConsumer = new IBMMessageConsumerThread(sourceEventListener,
+                        ibmMessageConsumerBean, connectionFactory, connectionCallback);
                 ibmMessageConsumerThreads.add(ibmMessageConsumer);
                 logger.info("IBM MQ message consumer worker thread '" + i + "' starting to listen on queue '" +
                         ibmMessageConsumerBean.getQueueName() + "'");
+            } catch (JMSException e) {
+                Exception mqException = e.getLinkedException();
+                if (mqException != null &&  mqException instanceof MQException &&
+                        IBMMQConstants.REASONS_FOR_CONNECTION_ISSUES.contains(
+                                ((MQException) mqException).getReason())) {
+                    throw new ConnectionUnavailableException("Failed to connect the IBM MQ source for the queue '" +
+                            ibmMessageConsumerBean.getDestinationName() +
+                            "' in siddhi app '" + siddhiAppName + "' to IBMMQ server due to " +
+                            e.getMessage(), e);
+
+                } else {
+                    throw new SiddhiAppRuntimeException("Failed to connect the IBM MQ source for the queue '" +
+                            ibmMessageConsumerBean.getDestinationName() +
+                            "' in siddhi app '" + siddhiAppName + "' to IBMMQ server due to " +
+                            e.getMessage(), e);
+                }
             }
-            for (IBMMessageConsumerThread consumerThread : ibmMessageConsumerThreads) {
-                executorService.submit(consumerThread);
-            }
-        } catch (Throwable t) {
-            logger.error("Error while creating IBMMessageConsumerThread for queue '" +
-                    ibmMessageConsumerBean.getQueueName() + "'", t);
+        }
+
+        for (IBMMessageConsumerThread consumerThread : ibmMessageConsumerThreads) {
+            executorService.submit(consumerThread);
         }
     }
 }

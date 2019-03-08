@@ -92,7 +92,13 @@ import javax.jms.JMSException;
                                 "WMQ_CLIENT_RECONNECT:5005' ",
                         type = DataType.STRING,
                         optional = true,
-                        defaultValue = "null")
+                        defaultValue = "null"),
+                @Parameter(name = IBMMQConstants.CLIENT_RECONNECT_TIMEOUT,
+                        description = "The time a client waits for reconnection. The value should be provided in " +
+                                "seconds.",
+                        type = DataType.INT,
+                        optional = true,
+                        defaultValue = "30")
         },
         examples = {
                 @Example(syntax = "@source(type='ibmmq',"
@@ -119,7 +125,6 @@ public class IBMMQSource extends Source {
     private IBMMessageConsumerBean ibmMessageConsumerBean = new IBMMessageConsumerBean();
     private SiddhiAppContext siddhiAppContext;
     private String properties;
-
 
     @Override
     public void init(SourceEventListener sourceEventListener, OptionHolder optionHolder,
@@ -155,6 +160,10 @@ public class IBMMQSource extends Source {
             connectionFactory.setQueueManager(optionHolder.validateAndGetOption(IBMMQConstants.QUEUE_MANAGER_NAME)
                     .getValue());
             connectionFactory.setTransportType(WMQConstants.WMQ_CM_CLIENT);
+            int clientReconnectTimeout = Integer.parseInt(optionHolder.validateAndGetStaticValue(
+                    IBMMQConstants.CLIENT_RECONNECT_TIMEOUT,
+                    IBMMQConstants.DEFAULT_CLIENT_RECONNECTION_TIMEOUT));
+            connectionFactory.setClientReconnectTimeout(clientReconnectTimeout);
             scheduledExecutorService = siddhiAppContext.getScheduledExecutorService();
         } catch (JMSException e) {
             throw new IBMMQSourceAdaptorRuntimeException("Error while initializing IBM MQ source: " + optionHolder.
@@ -165,9 +174,8 @@ public class IBMMQSource extends Source {
 
     @Override
     public void connect(ConnectionCallback connectionCallback) throws ConnectionUnavailableException {
-        //ConnectionCallback is not used as re-connection is handled by IBM MQ client.
         ibmMessageConsumerGroup = new IBMMessageConsumerGroup(scheduledExecutorService,
-                connectionFactory, ibmMessageConsumerBean);
+                connectionFactory, ibmMessageConsumerBean, connectionCallback, siddhiAppContext.getName());
         ibmMessageConsumerGroup.run(sourceEventListener);
     }
 

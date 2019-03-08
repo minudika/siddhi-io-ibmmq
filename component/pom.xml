@@ -121,6 +121,15 @@
                     <instructions>
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Name>${project.artifactId}</Bundle-Name>
+                        <Export-Package>
+                            org.wso2.extension.siddhi.execution.bny,
+                            org.wso2.extension.siddhi.execution.bny.*
+                        </Export-Package>
+                        <Import-Package>
+                            org.wso2.siddhi.core.*; version="${siddhi.version.range}",
+                            org.wso2.siddhi.annotation.*; version="${siddhi.version.range}",
+                            *;resolution:=optional
+                        </Import-Package>
                         <Private-Package>
                             org.apache.commons.pool2.*,
                         </Private-Package>
