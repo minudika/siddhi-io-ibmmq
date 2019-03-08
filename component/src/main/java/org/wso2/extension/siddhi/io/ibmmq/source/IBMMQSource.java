@@ -37,8 +37,6 @@ import org.wso2.siddhi.core.util.config.ConfigReader;
 import org.wso2.siddhi.core.util.transport.OptionHolder;
 
 import java.nio.ByteBuffer;
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -161,13 +159,6 @@ public class IBMMQSource extends Source {
                 IBMMQConstants.WORKER_COUNT, "1")));
         ibmMessageConsumerBean.setDestinationName(optionHolder.validateAndGetOption(IBMMQConstants.DESTINATION_NAME)
                 .getValue());
-        String maxRetries = optionHolder.validateAndGetStaticValue(IBMMQConstants.MAX_RETRIES,
-                        configReader.readConfig(IBMMQConstants.MAX_RETRIES, IBMMQConstants.DEFAULT_MAX_RETRIES));
-        ibmMessageConsumerBean.setMaxRetryCount(Integer.parseInt(maxRetries));
-        String retryInterval = optionHolder.validateAndGetStaticValue(IBMMQConstants.RETRY_INTERVAL,
-                configReader.readConfig(IBMMQConstants.RETRY_INTERVAL, IBMMQConstants.DEFAULT_RETRY_INTERVAL));
-        Long timeInMilliSeconds = Duration.of(Long.parseLong(retryInterval), ChronoUnit.SECONDS).toMillis();
-        ibmMessageConsumerBean.setRetryInterval(timeInMilliSeconds);
         if (Objects.nonNull(ibmMessageConsumerBean.getPassword()) &&
                 Objects.nonNull(ibmMessageConsumerBean.getUserName())) {
             ibmMessageConsumerBean.setSecured(true);
@@ -195,7 +186,7 @@ public class IBMMQSource extends Source {
     @Override
     public void connect(ConnectionCallback connectionCallback) throws ConnectionUnavailableException {
         ibmMessageConsumerGroup = new IBMMessageConsumerGroup(scheduledExecutorService,
-                connectionFactory, ibmMessageConsumerBean, connectionCallback);
+                connectionFactory, ibmMessageConsumerBean, connectionCallback, siddhiAppContext);
         ibmMessageConsumerGroup.run(sourceEventListener);
     }
 

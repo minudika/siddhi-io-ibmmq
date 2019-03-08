@@ -18,6 +18,11 @@
  */
 package org.wso2.extension.siddhi.io.ibmmq.util;
 
+import com.ibm.mq.constants.MQConstants;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * IBM MQ constants class
@@ -33,9 +38,23 @@ public class IBMMQConstants {
     public static final String WORKER_COUNT = "worker.count";
     public static final String PROPERTIES = "batch.properties";
     public static final String MAX_RETRIES = "max.retries";
-    public static final String DEFAULT_MAX_RETRIES = "5";
     public static final String RETRY_INTERVAL = "retry.interval";
     public static final String DEFAULT_RETRY_INTERVAL = "2";
     public static final String DEFAULT_CLIENT_RECONNECTION_TIMEOUT = "30";
     public static final String CLIENT_RECONNECT_TIMEOUT = "client.reconnecting.timeout";
+
+
+    // Error codes
+    public static final List<Integer> REASONS_FOR_CONNECTION_ISSUES =
+            Collections.unmodifiableList(Arrays.asList(
+                    MQConstants.MQRC_CONNECTION_BROKEN,
+                    MQConstants.MQRC_Q_MGR_NOT_AVAILABLE,
+                    MQConstants.MQRC_Q_MGR_QUIESCING,
+                    MQConstants.MQRC_CONNECTION_QUIESCING,
+                    MQConstants.MQRC_CONNECTION_STOPPING,
+                    MQConstants.MQRC_Q_MGR_NOT_ACTIVE,
+                    MQConstants.MQRC_CHANNEL_STOPPED_BY_USER,
+                    MQConstants.MQRC_CHANNEL_NOT_AVAILABLE,
+                    MQConstants.MQRC_HOST_NOT_AVAILABLE));
+
 }

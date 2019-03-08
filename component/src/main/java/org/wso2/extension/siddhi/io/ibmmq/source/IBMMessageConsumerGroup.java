@@ -18,10 +18,14 @@
 
 package org.wso2.extension.siddhi.io.ibmmq.source;
 
+import com.ibm.mq.MQException;
 import com.ibm.mq.jms.MQQueueConnectionFactory;
 
 import org.apache.log4j.Logger;
+import org.wso2.extension.siddhi.io.ibmmq.util.IBMMQConstants;
+import org.wso2.siddhi.core.config.SiddhiAppContext;
 import org.wso2.siddhi.core.exception.ConnectionUnavailableException;
+import org.wso2.siddhi.core.exception.SiddhiAppRuntimeException;
 import org.wso2.siddhi.core.stream.input.source.Source;
 import org.wso2.siddhi.core.stream.input.source.SourceEventListener;
 
@@ -41,14 +45,17 @@ public class IBMMessageConsumerGroup {
     private MQQueueConnectionFactory connectionFactory;
     private IBMMessageConsumerBean ibmMessageConsumerBean;
     private Source.ConnectionCallback connectionCallback;
+    private SiddhiAppContext siddhiAppContext;
 
     IBMMessageConsumerGroup(ScheduledExecutorService executorService, MQQueueConnectionFactory connectionFactory,
                             IBMMessageConsumerBean ibmMessageConsumerBean,
-                            Source.ConnectionCallback connectionCallback) {
+                            Source.ConnectionCallback connectionCallback,
+                            SiddhiAppContext siddhiAppContext) {
         this.executorService = executorService;
         this.connectionFactory = connectionFactory;
         this.ibmMessageConsumerBean = ibmMessageConsumerBean;
         this.connectionCallback = connectionCallback;
+        this.siddhiAppContext = siddhiAppContext;
     }
 
     void pause() {
@@ -69,13 +76,28 @@ public class IBMMessageConsumerGroup {
             try {
                 ibmMessageConsumer = new IBMMessageConsumerThread(sourceEventListener,
                         ibmMessageConsumerBean, connectionFactory, connectionCallback);
-            ibmMessageConsumerThreads.add(ibmMessageConsumer);
-            logger.info("IBM MQ message consumer worker thread '" + i + "' starting to listen on queue '" +
-                    ibmMessageConsumerBean.getQueueName() + "'");
+                ibmMessageConsumerThreads.add(ibmMessageConsumer);
+                logger.info("IBM MQ message consumer worker thread '" + i + "' starting to listen on queue '" +
+                        ibmMessageConsumerBean.getQueueName() + "'");
             } catch (JMSException e) {
-                throw new ConnectionUnavailableException(e.getMessage(), e);
+                Exception mqException = e.getLinkedException();
+                if (mqException != null &&  mqException instanceof MQException &&
+                        IBMMQConstants.REASONS_FOR_CONNECTION_ISSUES.contains(
+                                ((MQException) mqException).getReason())) {
+                    throw new ConnectionUnavailableException("Failed to connect the IBM MQ source for the queue '" +
+                            ibmMessageConsumerBean.getDestinationName() +
+                            "' in siddhi app '" + siddhiAppContext.getName() + "' to IBMMQ server due to " +
+                            e.getMessage(), e);
+
+                } else {
+                    throw new SiddhiAppRuntimeException("Failed to connect the IBM MQ source for the queue '" +
+                            ibmMessageConsumerBean.getDestinationName() +
+                            "' in siddhi app '" + siddhiAppContext.getName() + "' to IBMMQ server due to " +
+                            e.getMessage(), e);
+                }
             }
         }
+
         for (IBMMessageConsumerThread consumerThread : ibmMessageConsumerThreads) {
             executorService.submit(consumerThread);
         }
