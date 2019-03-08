@@ -37,9 +37,6 @@ public class IBMMQConstants {
     public static final String PASSWORD = "password";
     public static final String WORKER_COUNT = "worker.count";
     public static final String PROPERTIES = "batch.properties";
-    public static final String MAX_RETRIES = "max.retries";
-    public static final String RETRY_INTERVAL = "retry.interval";
-    public static final String DEFAULT_RETRY_INTERVAL = "2";
     public static final String DEFAULT_CLIENT_RECONNECTION_TIMEOUT = "30";
     public static final String CLIENT_RECONNECT_TIMEOUT = "client.reconnecting.timeout";
 

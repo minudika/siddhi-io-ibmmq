@@ -85,17 +85,6 @@ import javax.jms.JMSException;
                         type = DataType.INT,
                         optional = true,
                         defaultValue = "1"),
-                @Parameter(name = IBMMQConstants.MAX_RETRIES,
-                        description = "Maximum number of retries to reconnect to the MQ server during "
-                                + "a broken connection before giving up.",
-                        type = DataType.INT,
-                        optional = true,
-                        defaultValue = "5"),
-                @Parameter(name = IBMMQConstants.RETRY_INTERVAL,
-                        description = "Interval between retry attempts in seconds.",
-                        type = DataType.INT,
-                        optional = true,
-                        defaultValue = "2"),
                 @Parameter(name = IBMMQConstants.PROPERTIES,
                         description = "IBM MQ properties which are supported by the client can be provided as " +
                                 "key value pairs which is separated by \",\". as an example " +
@@ -186,7 +175,7 @@ public class IBMMQSource extends Source {
     @Override
     public void connect(ConnectionCallback connectionCallback) throws ConnectionUnavailableException {
         ibmMessageConsumerGroup = new IBMMessageConsumerGroup(scheduledExecutorService,
-                connectionFactory, ibmMessageConsumerBean, connectionCallback, siddhiAppContext);
+                connectionFactory, ibmMessageConsumerBean, connectionCallback, siddhiAppContext.getName());
         ibmMessageConsumerGroup.run(sourceEventListener);
     }
 

@@ -26,7 +26,6 @@ import org.slf4j.LoggerFactory;
 import org.wso2.siddhi.core.exception.ConnectionUnavailableException;
 import org.wso2.siddhi.core.stream.input.source.Source;
 import org.wso2.siddhi.core.stream.input.source.SourceEventListener;
-import org.wso2.siddhi.core.util.transport.BackoffRetryCounter;
 
 import java.nio.ByteBuffer;
 import java.util.Enumeration;
@@ -56,16 +55,10 @@ public class IBMMessageConsumerThread implements Runnable {
     private volatile boolean paused;
     private ReentrantLock lock;
     private Condition condition;
-
     private String queueName;
     private IBMMessageConsumerBean ibmMessageConsumerBean;
     private MQQueueConnectionFactory mqQueueConnectionFactory;
-
-    private AtomicBoolean isTryingToConnect = new AtomicBoolean(false);
-    private BackoffRetryCounter backoffRetryCounter = new BackoffRetryCounter();
-    private AtomicBoolean isConnected = new AtomicBoolean(true);
     private AtomicBoolean isInactive = new AtomicBoolean(true);
-    private int retryCount = 0;
     private Source.ConnectionCallback connectionCallback;
 
     public IBMMessageConsumerThread(SourceEventListener sourceEventListener,

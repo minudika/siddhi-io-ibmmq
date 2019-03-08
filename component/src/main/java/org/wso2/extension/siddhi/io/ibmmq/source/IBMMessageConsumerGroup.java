@@ -23,7 +23,6 @@ import com.ibm.mq.jms.MQQueueConnectionFactory;
 
 import org.apache.log4j.Logger;
 import org.wso2.extension.siddhi.io.ibmmq.util.IBMMQConstants;
-import org.wso2.siddhi.core.config.SiddhiAppContext;
 import org.wso2.siddhi.core.exception.ConnectionUnavailableException;
 import org.wso2.siddhi.core.exception.SiddhiAppRuntimeException;
 import org.wso2.siddhi.core.stream.input.source.Source;
@@ -45,17 +44,17 @@ public class IBMMessageConsumerGroup {
     private MQQueueConnectionFactory connectionFactory;
     private IBMMessageConsumerBean ibmMessageConsumerBean;
     private Source.ConnectionCallback connectionCallback;
-    private SiddhiAppContext siddhiAppContext;
+    private String siddhiAppName;
 
     IBMMessageConsumerGroup(ScheduledExecutorService executorService, MQQueueConnectionFactory connectionFactory,
                             IBMMessageConsumerBean ibmMessageConsumerBean,
                             Source.ConnectionCallback connectionCallback,
-                            SiddhiAppContext siddhiAppContext) {
+                            String siddhiAppName) {
         this.executorService = executorService;
         this.connectionFactory = connectionFactory;
         this.ibmMessageConsumerBean = ibmMessageConsumerBean;
         this.connectionCallback = connectionCallback;
-        this.siddhiAppContext = siddhiAppContext;
+        this.siddhiAppName = siddhiAppName;
     }
 
     void pause() {
@@ -86,13 +85,13 @@ public class IBMMessageConsumerGroup {
                                 ((MQException) mqException).getReason())) {
                     throw new ConnectionUnavailableException("Failed to connect the IBM MQ source for the queue '" +
                             ibmMessageConsumerBean.getDestinationName() +
-                            "' in siddhi app '" + siddhiAppContext.getName() + "' to IBMMQ server due to " +
+                            "' in siddhi app '" + siddhiAppName + "' to IBMMQ server due to " +
                             e.getMessage(), e);
 
                 } else {
                     throw new SiddhiAppRuntimeException("Failed to connect the IBM MQ source for the queue '" +
                             ibmMessageConsumerBean.getDestinationName() +
-                            "' in siddhi app '" + siddhiAppContext.getName() + "' to IBMMQ server due to " +
+                            "' in siddhi app '" + siddhiAppName + "' to IBMMQ server due to " +
                             e.getMessage(), e);
                 }
             }
