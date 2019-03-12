@@ -45,16 +45,17 @@ public class IBMMessageConsumerGroup {
     private IBMMessageConsumerBean ibmMessageConsumerBean;
     private Source.ConnectionCallback connectionCallback;
     private String siddhiAppName;
+    private ConnectionRetryHandler connectionRetryHandler;
 
     IBMMessageConsumerGroup(ScheduledExecutorService executorService, MQQueueConnectionFactory connectionFactory,
                             IBMMessageConsumerBean ibmMessageConsumerBean,
-                            Source.ConnectionCallback connectionCallback,
-                            String siddhiAppName) {
+                            String siddhiAppName,
+                            ConnectionRetryHandler connectionRetryHandler) {
         this.executorService = executorService;
         this.connectionFactory = connectionFactory;
         this.ibmMessageConsumerBean = ibmMessageConsumerBean;
-        this.connectionCallback = connectionCallback;
         this.siddhiAppName = siddhiAppName;
+        this.connectionRetryHandler = connectionRetryHandler;
     }
 
     void pause() {
@@ -70,11 +71,11 @@ public class IBMMessageConsumerGroup {
     }
 
     void run(SourceEventListener sourceEventListener) throws ConnectionUnavailableException {
-        for (int i = 0; i < ibmMessageConsumerBean.getWorkerCount(); i++) {
+       for (int i = 0; i < ibmMessageConsumerBean.getWorkerCount(); i++) {
             IBMMessageConsumerThread ibmMessageConsumer = null;
             try {
                 ibmMessageConsumer = new IBMMessageConsumerThread(sourceEventListener,
-                        ibmMessageConsumerBean, connectionFactory, connectionCallback);
+                        ibmMessageConsumerBean, connectionFactory, connectionRetryHandler);
                 ibmMessageConsumerThreads.add(ibmMessageConsumer);
                 logger.info("IBM MQ message consumer worker thread '" + i + "' starting to listen on queue '" +
                         ibmMessageConsumerBean.getQueueName() + "'");

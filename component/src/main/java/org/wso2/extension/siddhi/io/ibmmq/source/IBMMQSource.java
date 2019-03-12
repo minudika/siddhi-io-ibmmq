@@ -174,8 +174,8 @@ public class IBMMQSource extends Source {
 
     @Override
     public void connect(ConnectionCallback connectionCallback) throws ConnectionUnavailableException {
-        ibmMessageConsumerGroup = new IBMMessageConsumerGroup(scheduledExecutorService,
-                connectionFactory, ibmMessageConsumerBean, connectionCallback, siddhiAppContext.getName());
+        ibmMessageConsumerGroup = new IBMMessageConsumerGroup(scheduledExecutorService, connectionFactory,
+                ibmMessageConsumerBean, siddhiAppContext.getName(), new ConnectionRetryHandler(connectionCallback));
         ibmMessageConsumerGroup.run(sourceEventListener);
     }
 
