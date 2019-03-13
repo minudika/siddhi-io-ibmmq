@@ -24,7 +24,6 @@ import com.ibm.mq.jms.MQQueueConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wso2.siddhi.core.exception.ConnectionUnavailableException;
-import org.wso2.siddhi.core.stream.input.source.Source;
 import org.wso2.siddhi.core.stream.input.source.SourceEventListener;
 
 import java.nio.ByteBuffer;
@@ -59,20 +58,21 @@ public class IBMMessageConsumerThread implements Runnable {
     private IBMMessageConsumerBean ibmMessageConsumerBean;
     private MQQueueConnectionFactory mqQueueConnectionFactory;
     private AtomicBoolean isInactive = new AtomicBoolean(true);
-    private Source.ConnectionCallback connectionCallback;
+    private ConnectionRetryHandler connectionRetryHandler;
 
     public IBMMessageConsumerThread(SourceEventListener sourceEventListener,
                                     IBMMessageConsumerBean ibmMessageConsumerBean,
                                     MQQueueConnectionFactory mqQueueConnectionFactory,
-                                    Source.ConnectionCallback connectionCallback)
+                                    ConnectionRetryHandler connectionRetryHandler)
             throws JMSException, ConnectionUnavailableException {
         this.ibmMessageConsumerBean = ibmMessageConsumerBean;
         this.mqQueueConnectionFactory = mqQueueConnectionFactory;
         this.sourceEventListener = sourceEventListener;
         this.queueName = ibmMessageConsumerBean.getQueueName();
-        this.connectionCallback = connectionCallback;
-        lock = new ReentrantLock();
-        condition = lock.newCondition();
+        this.lock = new ReentrantLock();
+        this.condition = lock.newCondition();
+        this.connectionRetryHandler = connectionRetryHandler;
+
         connect();
     }
 
@@ -90,6 +90,7 @@ public class IBMMessageConsumerThread implements Runnable {
                         lock.unlock();
                     }
                 }
+
                 Message message = messageConsumer.receive();
                 if (message instanceof MapMessage) {
                     Map<String, Object> event = new HashMap<>();
@@ -108,7 +109,7 @@ public class IBMMessageConsumerThread implements Runnable {
                 }
             } catch (Throwable t) {
                 logger.error("Exception occurred during consuming messages: " + t.getMessage(), t);
-                connectionCallback.onError(new ConnectionUnavailableException(t));
+                connectionRetryHandler.onError(t);
             }
 
         }
