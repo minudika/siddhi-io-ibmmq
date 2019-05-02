@@ -18,10 +18,10 @@
 
 package org.wso2.extension.siddhi.io.ibmmq.source;
 
+import io.siddhi.core.exception.ConnectionUnavailableException;
+import io.siddhi.core.stream.input.source.Source;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.wso2.siddhi.core.exception.ConnectionUnavailableException;
-import org.wso2.siddhi.core.stream.input.source.Source;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 

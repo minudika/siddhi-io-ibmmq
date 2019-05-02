@@ -20,21 +20,24 @@ package org.wso2.extension.siddhi.io.ibmmq.source;
 
 import com.ibm.mq.jms.MQQueueConnectionFactory;
 import com.ibm.msg.client.wmq.WMQConstants;
+import io.siddhi.annotation.Example;
+import io.siddhi.annotation.Extension;
+import io.siddhi.annotation.Parameter;
+import io.siddhi.annotation.util.DataType;
+import io.siddhi.core.config.SiddhiAppContext;
+import io.siddhi.core.exception.ConnectionUnavailableException;
+import io.siddhi.core.stream.ServiceDeploymentInfo;
+import io.siddhi.core.stream.input.source.Source;
+import io.siddhi.core.stream.input.source.SourceEventListener;
+import io.siddhi.core.util.config.ConfigReader;
+import io.siddhi.core.util.snapshot.state.State;
+import io.siddhi.core.util.snapshot.state.StateFactory;
+import io.siddhi.core.util.transport.OptionHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wso2.extension.siddhi.io.ibmmq.sink.exception.IBMMQSinkAdaptorRuntimeException;
 import org.wso2.extension.siddhi.io.ibmmq.source.exception.IBMMQSourceAdaptorRuntimeException;
 import org.wso2.extension.siddhi.io.ibmmq.util.IBMMQConstants;
-import org.wso2.siddhi.annotation.Example;
-import org.wso2.siddhi.annotation.Extension;
-import org.wso2.siddhi.annotation.Parameter;
-import org.wso2.siddhi.annotation.util.DataType;
-import org.wso2.siddhi.core.config.SiddhiAppContext;
-import org.wso2.siddhi.core.exception.ConnectionUnavailableException;
-import org.wso2.siddhi.core.stream.input.source.Source;
-import org.wso2.siddhi.core.stream.input.source.SourceEventListener;
-import org.wso2.siddhi.core.util.config.ConfigReader;
-import org.wso2.siddhi.core.util.transport.OptionHolder;
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;
@@ -116,7 +119,7 @@ import javax.jms.JMSException;
         }
 )
 
-public class IBMMQSource extends Source {
+public class IBMMQSource extends Source<State> {
     private static final Logger logger = LoggerFactory.getLogger(IBMMQSource.class);
     private SourceEventListener sourceEventListener;
     private MQQueueConnectionFactory connectionFactory;
@@ -127,9 +130,14 @@ public class IBMMQSource extends Source {
     private String properties;
 
     @Override
-    public void init(SourceEventListener sourceEventListener, OptionHolder optionHolder,
-                     String[] requestedTransportPropertyNames, ConfigReader configReader,
-                     SiddhiAppContext siddhiAppContext) {
+    protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
+        return null;
+    }
+
+    @Override
+    public StateFactory<State> init(SourceEventListener sourceEventListener, OptionHolder optionHolder,
+                                    String[] requestedTransportPropertyNames, ConfigReader configReader,
+                                    SiddhiAppContext siddhiAppContext) {
         this.sourceEventListener = sourceEventListener;
         this.siddhiAppContext = siddhiAppContext;
         this.properties = optionHolder.validateAndGetStaticValue(IBMMQConstants.PROPERTIES, configReader.readConfig
@@ -169,19 +177,19 @@ public class IBMMQSource extends Source {
             throw new IBMMQSourceAdaptorRuntimeException("Error while initializing IBM MQ source: " + optionHolder.
                     validateAndGetOption(IBMMQConstants.DESTINATION_NAME).getValue() + ", " + e.getMessage(), e);
         }
-
-    }
-
-    @Override
-    public void connect(ConnectionCallback connectionCallback) throws ConnectionUnavailableException {
-        ibmMessageConsumerGroup = new IBMMessageConsumerGroup(scheduledExecutorService, connectionFactory,
-                ibmMessageConsumerBean, siddhiAppContext.getName(), new ConnectionRetryHandler(connectionCallback));
-        ibmMessageConsumerGroup.run(sourceEventListener);
+        return null;
     }
 
     @Override
     public Class[] getOutputEventClasses() {
         return new Class[]{String.class, Map.class, ByteBuffer.class};
+    }
+
+    @Override
+    public void connect(ConnectionCallback connectionCallback, State state) throws ConnectionUnavailableException {
+        ibmMessageConsumerGroup = new IBMMessageConsumerGroup(scheduledExecutorService, connectionFactory,
+                ibmMessageConsumerBean, siddhiAppContext.getName(), new ConnectionRetryHandler(connectionCallback));
+        ibmMessageConsumerGroup.run(sourceEventListener);
     }
 
     @Override
@@ -214,16 +222,6 @@ public class IBMMQSource extends Source {
                 logger.debug("IBM MQ source resumed for queue '" + ibmMessageConsumerBean.getQueueName() + "'");
             }
         }
-    }
-
-    @Override
-    public Map<String, Object> currentState() {
-        return null;
-    }
-
-    @Override
-    public void restoreState(Map<String, Object> state) {
-        // no state to restore
     }
 
     private Map<String, Object> generatePropertyMap(String properties) {
