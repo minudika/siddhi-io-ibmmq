@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.wso2.extension.siddhi.io.ibmmq</groupId>
         <artifactId>siddhi-io-ibmmq-parent</artifactId>
-        <version>2.0.0-SNAPSHOT</version>
+        <version>1.1.3-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -34,15 +34,15 @@
 
     <dependencies>
         <dependency>
-            <groupId>io.siddhi</groupId>
+            <groupId>org.wso2.siddhi</groupId>
             <artifactId>siddhi-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.siddhi</groupId>
+            <groupId>org.wso2.siddhi</groupId>
             <artifactId>siddhi-query-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.siddhi</groupId>
+            <groupId>org.wso2.siddhi</groupId>
             <artifactId>siddhi-annotations</artifactId>
         </dependency>
         <dependency>
@@ -79,7 +79,7 @@
             <build>
                 <plugins>
                     <plugin>
-                        <groupId>io.siddhi</groupId>
+                        <groupId>org.wso2.siddhi</groupId>
                         <artifactId>siddhi-doc-gen</artifactId>
                         <version>${siddhi.version}</version>
                         <executions>
@@ -122,8 +122,8 @@
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Name>${project.artifactId}</Bundle-Name>
                         <Import-Package>
-                            io.siddhi.core.*; version="${siddhi.version.range}",
-                            io.siddhi.annotation.*; version="${siddhi.version.range}",
+                            org.wso2.siddhi.core.*; version="${siddhi.version.range}",
+                            org.wso2.siddhi.annotation.*; version="${siddhi.version.range}",
                             *;resolution:=optional
                         </Import-Package>
                         <Private-Package>
@@ -139,7 +139,7 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>io.siddhi</groupId>
+                <groupId>org.wso2.siddhi</groupId>
                 <artifactId>siddhi-doc-gen</artifactId>
                 <version>${siddhi.version}</version>
                 <executions>
