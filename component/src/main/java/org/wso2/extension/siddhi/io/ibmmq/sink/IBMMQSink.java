@@ -21,24 +21,21 @@ package org.wso2.extension.siddhi.io.ibmmq.sink;
 
 import com.ibm.mq.jms.MQQueueConnectionFactory;
 import com.ibm.msg.client.wmq.WMQConstants;
-import io.siddhi.annotation.Example;
-import io.siddhi.annotation.Extension;
-import io.siddhi.annotation.Parameter;
-import io.siddhi.annotation.util.DataType;
-import io.siddhi.core.config.SiddhiAppContext;
-import io.siddhi.core.exception.ConnectionUnavailableException;
-import io.siddhi.core.stream.ServiceDeploymentInfo;
-import io.siddhi.core.stream.output.sink.Sink;
-import io.siddhi.core.util.config.ConfigReader;
-import io.siddhi.core.util.snapshot.state.State;
-import io.siddhi.core.util.snapshot.state.StateFactory;
-import io.siddhi.core.util.transport.DynamicOptions;
-import io.siddhi.core.util.transport.OptionHolder;
-import io.siddhi.query.api.definition.StreamDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wso2.extension.siddhi.io.ibmmq.sink.exception.IBMMQSinkAdaptorRuntimeException;
 import org.wso2.extension.siddhi.io.ibmmq.util.IBMMQConstants;
+import org.wso2.siddhi.annotation.Example;
+import org.wso2.siddhi.annotation.Extension;
+import org.wso2.siddhi.annotation.Parameter;
+import org.wso2.siddhi.annotation.util.DataType;
+import org.wso2.siddhi.core.config.SiddhiAppContext;
+import org.wso2.siddhi.core.exception.ConnectionUnavailableException;
+import org.wso2.siddhi.core.stream.output.sink.Sink;
+import org.wso2.siddhi.core.util.config.ConfigReader;
+import org.wso2.siddhi.core.util.transport.DynamicOptions;
+import org.wso2.siddhi.core.util.transport.OptionHolder;
+import org.wso2.siddhi.query.api.definition.StreamDefinition;
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;
@@ -118,7 +115,7 @@ import javax.jms.Session;
         }
 )
 
-public class IBMMQSink extends Sink<State> {
+public class IBMMQSink extends Sink {
     private static final Logger LOG = LoggerFactory.getLogger(IBMMQSink.class);
     private OptionHolder optionHolder;
     private QueueConnection connection;
@@ -141,18 +138,12 @@ public class IBMMQSink extends Sink<State> {
     }
 
     @Override
-    protected ServiceDeploymentInfo exposeServiceDeploymentInfo() {
-        return null;
-    }
-
-    @Override
     public String[] getSupportedDynamicOptions() {
         return new String[0];
     }
 
-
     @Override
-    protected StateFactory<State> init(StreamDefinition outputStreamDefinition, OptionHolder optionHolder, ConfigReader
+    protected void init(StreamDefinition outputStreamDefinition, OptionHolder optionHolder, ConfigReader
             sinkConfigReader, SiddhiAppContext siddhiAppContext) {
         this.siddhiAppContext = siddhiAppContext;
         this.optionHolder = optionHolder;
@@ -188,12 +179,10 @@ public class IBMMQSink extends Sink<State> {
             throw new IBMMQSinkAdaptorRuntimeException("Error while initializing IBM MQ sink: " + optionHolder.
                     validateAndGetOption(IBMMQConstants.DESTINATION_NAME).getValue() + ", " + e.getMessage(), e);
         }
-        return null;
     }
 
     @Override
-    public void publish(Object payload, DynamicOptions dynamicOptions, State state)
-            throws ConnectionUnavailableException {
+    public void publish(Object payload, DynamicOptions transportOptions) throws ConnectionUnavailableException {
         try {
             if (payload instanceof String) {
                 Message message = session.createTextMessage(payload.toString());
@@ -276,6 +265,16 @@ public class IBMMQSink extends Sink<State> {
     @Override
     public void destroy() {
         // disconnect() gets called before destroy() which does the cleanup destroy() needs
+    }
+
+    @Override
+    public Map<String, Object> currentState() {
+        return null;
+    }
+
+    @Override
+    public void restoreState(Map<String, Object> state) {
+        //not available
     }
 
     private Map<String, Object> generatePropertyMap(String properties) {
