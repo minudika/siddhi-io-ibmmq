@@ -16,7 +16,7 @@
  *  under the License.
  *
  */
-package org.wso2.extension.siddhi.io.ibmmq.sink.exception;
+package io.siddhi.extension.io.ibmmq.sink.exception;
 
 /**
  * IBM MQ sink adaptor specific exception.

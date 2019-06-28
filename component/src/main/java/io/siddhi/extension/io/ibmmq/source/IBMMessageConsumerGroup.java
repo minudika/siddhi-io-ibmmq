@@ -16,17 +16,19 @@
  * under the License.
  */
 
-package org.wso2.extension.siddhi.io.ibmmq.source;
+package io.siddhi.extension.io.ibmmq.source;
+
 
 import com.ibm.mq.MQException;
 import com.ibm.mq.jms.MQQueueConnectionFactory;
 
+import io.siddhi.core.exception.ConnectionUnavailableException;
+import io.siddhi.core.exception.SiddhiAppRuntimeException;
+import io.siddhi.core.stream.input.source.Source;
+import io.siddhi.core.stream.input.source.SourceEventListener;
+import io.siddhi.extension.io.ibmmq.util.IBMMQConstants;
+
 import org.apache.log4j.Logger;
-import org.wso2.extension.siddhi.io.ibmmq.util.IBMMQConstants;
-import org.wso2.siddhi.core.exception.ConnectionUnavailableException;
-import org.wso2.siddhi.core.exception.SiddhiAppRuntimeException;
-import org.wso2.siddhi.core.stream.input.source.Source;
-import org.wso2.siddhi.core.stream.input.source.SourceEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -71,7 +73,7 @@ public class IBMMessageConsumerGroup {
     }
 
     void run(SourceEventListener sourceEventListener) throws ConnectionUnavailableException {
-       for (int i = 0; i < ibmMessageConsumerBean.getWorkerCount(); i++) {
+        for (int i = 0; i < ibmMessageConsumerBean.getWorkerCount(); i++) {
             IBMMessageConsumerThread ibmMessageConsumer = null;
             try {
                 ibmMessageConsumer = new IBMMessageConsumerThread(sourceEventListener,
@@ -81,7 +83,7 @@ public class IBMMessageConsumerGroup {
                         ibmMessageConsumerBean.getQueueName() + "'");
             } catch (JMSException e) {
                 Exception mqException = e.getLinkedException();
-                if (mqException != null &&  mqException instanceof MQException &&
+                if (mqException != null && mqException instanceof MQException &&
                         IBMMQConstants.REASONS_FOR_CONNECTION_ISSUES.contains(
                                 ((MQException) mqException).getReason())) {
                     throw new ConnectionUnavailableException("Failed to connect the IBM MQ source for the queue '" +

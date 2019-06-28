@@ -23,7 +23,7 @@ Latest API Docs is <a target="_blank" href="https://wso2-extensions.github.io/si
 
     - Download and install IBM MQ Websphere v7.5.0 or higher
     - Create a queue manager, queue, and a channel. 
-    - Download [com.ibm.mq.allclient_9.0.5.0_1.0.0.jar](http://central.maven.org/maven2/com/ibm/mq/com.ibm.mq.allclient/9.0.5.0/com.ibm.mq.allclient-9.0.5.0.jar) and [javax.jms-api-2.0.1.jar] (http://central.maven.org/maven2/javax/jms/javax.jms-api/2.0.1/javax.jms-api-2.0.1.jar).
+    - Download [com.ibm.mq.allclient_9.0.5.0_1.0.0.jar](http://central.maven.org/maven2/com/ibm/mq/com.ibm.mq.allclient/9.0.5.0/com.ibm.mq.allclient-9.0.5.0.jar) and [javax.jms-api-2.0.1.jar](http://central.maven.org/maven2/javax/jms/javax.jms-api/2.0.1/javax.jms-api-2.0.1.jar).
     and copy to the `<SP_HOME>/lib` directory
                 
  
@@ -31,13 +31,13 @@ Latest API Docs is <a target="_blank" href="https://wso2-extensions.github.io/si
 
 - This extension is shipped by default with WSO2 Stream Processor, if you wish to use an alternative version of this extension you can replace the component <a target="_blank" href="https://github.com/wso2-extensions/siddhi-io-ibmmq/releases">jar</a> that can be found in the `<STREAM_PROCESSOR_HOME>/lib` directory.
 
-**Using the extension as a <a target="_blank" href="https://wso2.github.io/siddhi/documentation/running-as-a-java-library">java library</a>**
+**Using the extension as a <a target="_blank" href="https://siddhi.io/en/v5.0/docs/siddhi-as-a-java-library/">java library</a>**
 
 * This extension can be added as a maven dependency along with other Siddhi dependencies to your project.
 
 ```
      <dependency>
-        <groupId>org.wso2.extension.siddhi.io.ibmmq</groupId>
+        <groupId>io.siddhi.extension.io.ibmmq</groupId>
         <artifactId>siddhi-io-ibmmq</artifactId>
         <version>x.x.x</version>
      </dependency>
