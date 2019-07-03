@@ -16,7 +16,7 @@
  *  under the License.
  *
  */
-package io.siddhi.extension.io.ibmmq.util;
+package org.wso2.extension.siddhi.io.ibmmq.util;
 
 import com.ibm.mq.constants.MQConstants;
 

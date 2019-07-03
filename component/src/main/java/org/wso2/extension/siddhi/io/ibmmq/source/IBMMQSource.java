@@ -16,7 +16,8 @@
  *  under the License.
  *
  */
-package io.siddhi.extension.io.ibmmq.source;
+package org.wso2.extension.siddhi.io.ibmmq.source;
+
 
 import com.ibm.mq.jms.MQQueueConnectionFactory;
 import com.ibm.msg.client.wmq.WMQConstants;
@@ -34,12 +35,12 @@ import io.siddhi.core.util.config.ConfigReader;
 import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.core.util.transport.OptionHolder;
-import io.siddhi.extension.io.ibmmq.sink.exception.IBMMQSinkAdaptorRuntimeException;
-import io.siddhi.extension.io.ibmmq.source.exception.IBMMQSourceAdaptorRuntimeException;
-import io.siddhi.extension.io.ibmmq.util.IBMMQConstants;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wso2.extension.siddhi.io.ibmmq.sink.exception.IBMMQSinkAdaptorRuntimeException;
+import org.wso2.extension.siddhi.io.ibmmq.source.exception.IBMMQSourceAdaptorRuntimeException;
+import org.wso2.extension.siddhi.io.ibmmq.util.IBMMQConstants;
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;
@@ -48,7 +49,6 @@ import java.util.Objects;
 import java.util.concurrent.ScheduledExecutorService;
 
 import javax.jms.JMSException;
-
 
 /**
  * IBM MQ Source implementation.

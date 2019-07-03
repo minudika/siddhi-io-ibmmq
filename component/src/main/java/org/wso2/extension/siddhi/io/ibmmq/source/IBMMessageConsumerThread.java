@@ -16,7 +16,7 @@
  *  under the License.
  *
  */
-package io.siddhi.extension.io.ibmmq.source;
+package org.wso2.extension.siddhi.io.ibmmq.source;
 
 import com.ibm.mq.jms.MQConnection;
 import com.ibm.mq.jms.MQQueueConnectionFactory;

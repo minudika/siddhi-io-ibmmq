@@ -17,8 +17,7 @@
  *
  */
 
-package io.siddhi.extension.io.ibmmq.sink;
-
+package org.wso2.extension.siddhi.io.ibmmq.sink;
 
 import com.ibm.mq.jms.MQQueueConnectionFactory;
 import com.ibm.msg.client.wmq.WMQConstants;
@@ -36,12 +35,12 @@ import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.core.util.transport.DynamicOptions;
 import io.siddhi.core.util.transport.OptionHolder;
-import io.siddhi.extension.io.ibmmq.sink.exception.IBMMQSinkAdaptorRuntimeException;
-import io.siddhi.extension.io.ibmmq.util.IBMMQConstants;
 import io.siddhi.query.api.definition.StreamDefinition;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wso2.extension.siddhi.io.ibmmq.sink.exception.IBMMQSinkAdaptorRuntimeException;
+import org.wso2.extension.siddhi.io.ibmmq.util.IBMMQConstants;
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;

@@ -17,7 +17,7 @@
  *
  */
 
-package io.siddhi.extension.io.ibmmq.sink;
+package org.wso2.extension.siddhi.io.ibmmq.sink;
 
 import io.siddhi.core.SiddhiAppRuntime;
 import io.siddhi.core.SiddhiManager;

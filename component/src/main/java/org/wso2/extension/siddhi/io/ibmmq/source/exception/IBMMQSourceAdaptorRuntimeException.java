@@ -17,7 +17,7 @@
  *
  */
 
-package io.siddhi.extension.io.ibmmq.source.exception;
+package org.wso2.extension.siddhi.io.ibmmq.source.exception;
 
 /**
  * IBM MQ input adaptor specific exception.

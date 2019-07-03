@@ -15,7 +15,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.siddhi.extension.io.ibmmq.source;
+package org.wso2.extension.siddhi.io.ibmmq.source;
 
 import java.util.Map;
 

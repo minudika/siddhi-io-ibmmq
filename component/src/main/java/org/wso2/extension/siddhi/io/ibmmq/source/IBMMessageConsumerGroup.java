@@ -16,7 +16,7 @@
  * under the License.
  */
 
-package io.siddhi.extension.io.ibmmq.source;
+package org.wso2.extension.siddhi.io.ibmmq.source;
 
 
 import com.ibm.mq.MQException;
@@ -26,9 +26,9 @@ import io.siddhi.core.exception.ConnectionUnavailableException;
 import io.siddhi.core.exception.SiddhiAppRuntimeException;
 import io.siddhi.core.stream.input.source.Source;
 import io.siddhi.core.stream.input.source.SourceEventListener;
-import io.siddhi.extension.io.ibmmq.util.IBMMQConstants;
 
 import org.apache.log4j.Logger;
+import org.wso2.extension.siddhi.io.ibmmq.util.IBMMQConstants;
 
 import java.util.ArrayList;
 import java.util.List;
